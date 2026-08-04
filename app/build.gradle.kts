@@ -46,7 +46,13 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
-// OkHttp for logging
-    implementation(libs.logging.interceptor)
-    implementation(libs.okhttp)
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // Optional: Logging Interceptor (highly recommended for debugging)
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    dependencies {
+        implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.4")
+        implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.4")
+        implementation("androidx.activity:activity-ktx:1.9.1")
+    }
 }
