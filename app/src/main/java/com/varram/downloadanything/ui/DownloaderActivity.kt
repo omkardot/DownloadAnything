@@ -37,6 +37,8 @@ class DownloaderActivity : AppCompatActivity()  {
     private lateinit var statusText: TextView
     private lateinit var progressBar: ProgressBar
     private lateinit var progressText: TextView
+    private lateinit var etaText: TextView
+    private lateinit var speedText: TextView
     private lateinit var notifificationHelper: DownloadNotificationHelper
 
     // by viewModels() gives us a ViewModel that survives configuration
@@ -55,6 +57,8 @@ class DownloaderActivity : AppCompatActivity()  {
         statusText = findViewById(R.id.statusText)
         progressBar = findViewById(R.id.downloadProgressBar)
         progressText = findViewById(R.id.progressText)
+        speedText = findViewById(R.id.speedText)
+        etaText = findViewById(R.id.etaText)
         notifificationHelper = DownloadNotificationHelper(applicationContext)
 
         val downloadButton: Button = findViewById(R.id.downloadButton)
@@ -71,7 +75,7 @@ class DownloaderActivity : AppCompatActivity()  {
                 notifificationHelper.updateNotification(DownloadState.Idle)
             }
             if (hasStoragePermission()) {
-                viewModel.startDownload(applicationContext, url)
+                viewModel.startDownloadFile(applicationContext, url)
             } else {
                 requestStoragePermission()
             }
@@ -94,10 +98,12 @@ class DownloaderActivity : AppCompatActivity()  {
                             progressBar.isIndeterminate = false
                             progressBar.progress = 0
                             progressText.text = "0%"
-                            statusText.text = "Ready"
+                            speedText.text = ""
+                            etaText.text = ""
+                            statusText.text = "Ready to download"
                         }
+
                         is DownloadState.Downloading -> {
-                            // Only change indeterminate mode if it actually toggled
                             if (progressBar.isIndeterminate != state.indeterminate) {
                                 progressBar.isIndeterminate = state.indeterminate
                             }
@@ -105,22 +111,36 @@ class DownloaderActivity : AppCompatActivity()  {
                             if (!state.indeterminate) {
                                 progressBar.progress = state.progress
                                 progressText.text = "${state.progress}%"
+
+                                val downloadedStr = formatBytes(state.bytesDownloaded)
+                                val totalStr = formatBytes(state.bytesTotal)
+                                statusText.text = "Downloaded: $downloadedStr / $totalStr"
+
+                                etaText.text = "⏳ " + formatEta(state.etaSeconds)
                             } else {
-                                val kbDownloaded = state.bytesDownloaded / 1024
-                                progressText.text = if (kbDownloaded > 0) "$kbDownloaded KB" else "Starting..."
+                                progressText.text = formatBytes(state.bytesDownloaded)
+                                statusText.text = "Downloading (Size unknown)"
+                                etaText.text = "⏳ --"
                             }
-                            statusText.text = "Downloading…"
+
+                            speedText.text = "⚡ " + formatSpeed(state.speedBytesPerSec)
                         }
+
                         is DownloadState.Success -> {
                             progressBar.isIndeterminate = false
                             progressBar.progress = 100
                             progressText.text = "100%"
+                            speedText.text = ""
+                            etaText.text = ""
                             statusText.text = "Downloaded \"${state.fileName}\" to Downloads folder."
                         }
+
                         is DownloadState.Failed -> {
                             progressBar.isIndeterminate = false
                             progressBar.progress = 0
                             progressText.text = ""
+                            speedText.text = ""
+                            etaText.text = ""
                             statusText.text = "Failed: ${state.reason}"
                             Toast.makeText(this@DownloaderActivity, state.reason, Toast.LENGTH_SHORT).show()
                         }
@@ -128,6 +148,37 @@ class DownloaderActivity : AppCompatActivity()  {
                     notifificationHelper.updateNotification(state)
                 }
             }
+        }
+    }
+
+    // Format Speed: Bytes/sec -> KB/s or MB/s
+    private fun formatSpeed(bytesPerSec: Long): String {
+        return when {
+            bytesPerSec >= 1024 * 1024 -> String.format("%.2f MB/s", bytesPerSec / (1024f * 1024f))
+            bytesPerSec >= 1024 -> String.format("%.1f KB/s", bytesPerSec / 1024f)
+            else -> "$bytesPerSec B/s"
+        }
+    }
+
+    // Format ETA: Seconds -> "01m 24s left" or "45s left"
+    private fun formatEta(seconds: Long): String {
+        if (seconds <= 0) return "Calculating..."
+        val mins = seconds / 60
+        val secs = seconds % 60
+        return if (mins > 0) {
+            String.format("%02dm %02ds left", mins, secs)
+        } else {
+            "${secs}s left"
+        }
+    }
+
+    // Format File Size: Bytes -> MB / GB
+    private fun formatBytes(bytes: Long): String {
+        return when {
+            bytes >= 1024 * 1024 * 1024 -> String.format("%.2f GB", bytes / (1024f * 1024f * 1024f))
+            bytes >= 1024 * 1024 -> String.format("%.1f MB", bytes / (1024f * 1024f))
+            bytes >= 1024 -> String.format("%.0f KB", bytes / 1024f)
+            else -> "$bytes B"
         }
     }
     private fun hasStoragePermission(): Boolean {
@@ -173,7 +224,7 @@ class DownloaderActivity : AppCompatActivity()  {
         when (requestCode) {
             storagePermissionCode -> {
                 if (granted) {
-                    viewModel.startDownload(applicationContext, urlInput.text.toString().trim())
+                    viewModel.startDownloadFile(applicationContext, urlInput.text.toString().trim())
                 } else {
                     statusText.text = "Storage permission is needed to save the file."
                 }

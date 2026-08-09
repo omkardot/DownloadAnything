@@ -44,7 +44,7 @@ class DownloadNotificationHelper(private val context: Context) {
         }
 
         val builder = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(R.drawable.ic_launcher_background)
+            .setSmallIcon(R.drawable.download_anything_logo)
             .setOnlyAlertOnce(true) // Keeps sound/vibration silent when updating progress
             .setOngoing(state is DownloadState.Downloading) // Prevents user from swiping away while downloading
 

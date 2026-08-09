@@ -16,7 +16,10 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
-
+    buildFeatures {
+        dataBinding = true
+        viewBinding = true
+    }
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -39,6 +42,8 @@ dependencies {
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.navigation.fragment)
+    implementation(libs.androidx.navigation.ui)
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
@@ -50,9 +55,8 @@ dependencies {
 
     // Optional: Logging Interceptor (highly recommended for debugging)
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
-    dependencies {
-        implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.4")
-        implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.4")
-        implementation("androidx.activity:activity-ktx:1.9.1")
-    }
+
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.4")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.4")
+    implementation("androidx.activity:activity-ktx:1.9.1")
 }

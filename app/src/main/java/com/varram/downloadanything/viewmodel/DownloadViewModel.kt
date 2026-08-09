@@ -8,6 +8,7 @@ import android.os.Environment
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.varram.downloadanything.network.FileDownloader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -20,10 +21,12 @@ import kotlinx.coroutines.launch
 sealed class DownloadState {
     object Idle : DownloadState()
     data class Downloading(
-        val progress: Int,
-        val bytesDownloaded: Long,
-        val bytesTotal: Long,
-        val indeterminate: Boolean
+        val progress: Int,              // 0 - 100
+        val bytesDownloaded: Long,      // Bytes
+        val bytesTotal: Long,           // Bytes
+        val speedBytesPerSec: Long,     // Speed in bytes/sec
+        val etaSeconds: Long,           // Estimated remaining time in seconds
+        val indeterminate: Boolean      // True if total size is unknown
     ) : DownloadState()
     data class Success(val fileName: String) : DownloadState()
     data class Failed(val reason: String) : DownloadState()
@@ -51,13 +54,25 @@ class DownloaderViewModel : ViewModel() {
             val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
             val downloadId = downloadManager.enqueue(request)
 
-            _downloadState.value = DownloadState.Downloading(0, 0, 0, indeterminate = true)
+            _downloadState.value = DownloadState.Downloading(0, 0, 0,0L,0L, indeterminate = true)
             observeProgress(downloadManager, downloadId, fileName)
         } catch (e: Exception) {
             _downloadState.value = DownloadState.Failed(e.message ?: "Unknown error")
         }
     }
+    fun startDownloadFile(context: Context, url: String) {
+        // Cancel any in-flight download before starting a new one - otherwise
+        // two downloads could write progress to the same StateFlow at once.
+        pollingJob?.cancel()
 
+        val downloader = FileDownloader(context.applicationContext)
+
+        pollingJob = viewModelScope.launch {
+            downloader.download(url).collect { state ->
+                _downloadState.value = state
+            }
+        }
+    }
     private fun observeProgress(downloadManager: DownloadManager, downloadId: Long, fileName: String) {
         pollingJob?.cancel()
 
@@ -102,9 +117,9 @@ class DownloaderViewModel : ViewModel() {
                     DownloadManager.STATUS_RUNNING, DownloadManager.STATUS_PENDING, DownloadManager.STATUS_PAUSED -> {
                         if (bytesTotal > 0) {
                             val progress = ((bytesDownloaded * 100) / bytesTotal).toInt()
-                            emit(DownloadState.Downloading(progress, bytesDownloaded, bytesTotal, indeterminate = false))
+//                            emit(DownloadState.Downloading(progress, bytesDownloaded, bytesTotal, indeterminate = false))
                         } else {
-                            emit(DownloadState.Downloading(0, bytesDownloaded, bytesTotal, indeterminate = true))
+//                            emit(DownloadState.Downloading(0, bytesDownloaded, bytesTotal, indeterminate = true))
                         }
                     }
                 }
