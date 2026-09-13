@@ -6,14 +6,50 @@
     android:layout_height="match_parent">
 
     <!-- Top App Bar -->
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/topAppBar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorSurfaceVariant"
-        app:title="Download Anything"
-        app:titleCentered="true"
-        app:layout_constraintTop_toTopOf="parent" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="65dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:weightSum="10"
+            android:id="@+id/topAppBar"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            app:layout_constraintTop_toTopOf="parent"
+            >
+
+            <!-- Left image -->
+            <ImageView
+                android:id="@+id/logoLeft"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="40dp"
+                android:src="@drawable/download_anything_logo"
+                android:contentDescription="Logo" />
+
+            <!-- Text between images -->
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Downloads"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:layout_weight="8"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="12dp"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+            <!-- Right image (pushed to the end) -->
+            <ImageView
+                android:id="@+id/logoRight"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:src="@drawable/icon_history"
+                android:layout_weight="1"
+                android:contentDescription="History"
+                android:layout_marginStart="16dp" />
+        </LinearLayout>
 
     <!-- Fragment Navigation Container -->
     <androidx.fragment.app.FragmentContainerView

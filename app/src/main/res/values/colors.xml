@@ -2,4 +2,6 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="error_red">#93000a</color>
+    <color name="error_text_red">#ffdad6</color>
 </resources>
